@@ -1,0 +1,29 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Data files — trop lourds pour GitHub
+data/raw/
+data/clean/
+data/*.duckdb
+
+# Airflow
+logs/
+airflow.db
+airflow.db-shm
+airflow.db-wal
+airflow.cfg
+airflow.cfg.bak
+standalone_admin_password.txt
+simple_auth_manager_passwords.json.generated
+webserver_config.py
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

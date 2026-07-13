@@ -1,9 +1,31 @@
 # Finance Data Platform
 
-A production-grade batch data pipeline processing real-time stock market data
-for 5 major companies (AAPL, GOOGL, AMZN, MSFT, TSLA).
+A production-grade batch ETL pipeline processing daily stock market data
+for 5 major tech stocks (AAPL, GOOGL, AMZN, MSFT, TSLA), orchestrated with
+Apache Airflow and served through a live Streamlit dashboard.
 
 ## Architecture
+
+```mermaid
+flowchart LR
+    A[Yahoo Finance API<br/>yfinance] -->|extraction.py<br/>2 years OHLCV| B[(Raw layer<br/>Parquet)]
+    B -->|transformation.py<br/>PySpark — 8 KPIs| C[(Clean layer<br/>Parquet)]
+    C -->|loading.py| D[(DuckDB<br/>kpis + correlations)]
+    D --> E[Streamlit dashboard<br/>Plotly]
+    F[Apache Airflow<br/>daily @ 08:00 UTC] -.->|orchestrates| A
+    F -.-> B
+    F -.-> C
+```
+
+**Flow:** every day at 08:00 UTC, an Airflow DAG (`finance_batch_pipeline`)
+runs three tasks in sequence:
+
+1. **Extract** — pulls 2 years of daily OHLCV data for the 5 tickers from
+   the Yahoo Finance API and lands it as Parquet (raw layer)
+2. **Transform** — a PySpark job computes 8 financial KPIs per ticker and
+   the cross-asset correlation matrix, written back as Parquet (clean layer)
+3. **Load** — results are loaded into DuckDB as two analytical tables
+   (`kpis`, `correlations`) that power the Streamlit dashboard
 
 ## Tech Stack
 
@@ -32,6 +54,21 @@ for 5 major companies (AAPL, GOOGL, AMZN, MSFT, TSLA).
 
 ## Project Structure
 
+```
+finance-data-platform/
+├── dags/
+│   └── batch_pipeline.py      # Airflow DAG — daily ETL orchestration
+├── src/
+│   ├── extraction.py          # Yahoo Finance API → raw Parquet
+│   ├── transformation.py      # PySpark KPI computation → clean Parquet
+│   └── loading.py             # Parquet → DuckDB (kpis, correlations)
+├── dashboard/
+│   └── app.py                 # Streamlit dashboard
+├── screenshots/               # Dashboard previews
+├── requirements.txt
+└── README.md
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -44,8 +81,8 @@ for 5 major companies (AAPL, GOOGL, AMZN, MSFT, TSLA).
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/finance-platform.git
-cd finance-platform
+git clone https://github.com/SalimaYoula/finance-data-platform.git
+cd finance-data-platform
 
 # Create virtual environment
 python3 -m venv venv
@@ -98,5 +135,5 @@ Open **http://localhost:8501** in your browser.
 
 ## Author
 
-Salematou Youla — [LinkedIn](https://www.linkedin.com/in/salematou-youla-b7784790) | [GitHub](https://github.com/SalimaYoula)
-
+Salematou Youla — Data Engineer
+[LinkedIn](https://www.linkedin.com/in/salematou-youla) | [GitHub](https://github.com/SalimaYoula)
